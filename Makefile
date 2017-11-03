@@ -29,19 +29,21 @@
 #  Installer configuration section
 #  (be sure to edit config.h, too)
 BINDIR=/usr/local/bin
-MANDIR=/usr/local/man
+MANDIR=/usr/local/share/man
+#BINDIR=/usr/bin/popclient
+#MANDIR=/usr/man
 MANSECTION=1
 
 #######################################################################
 #  Compiler configuration section
 #  K & R compilers may want to set CFLAGS=-DNO_PROTO
 #
-CFLAGS=
-CC=cc
+CFLAGS=-Imd5
+CC=gcc
 #  System V may require 'LIBS=-lbsd' here.
 LIBS=
 TARGET=popclient
-OBJECTS=popclient.o pop2.o pop3.o socket.o
+OBJECTS=popclient.o pop2.o pop3.o socket.o md5c.o
 
 
 #######################################################################
@@ -68,11 +70,17 @@ pop3.o: pop3.c popclient.h socket.h config.h
 
 socket.o: socket.c socket.h config.h
 
+md5c.o: md5c.c
+
+md5c.c:
+	ln -s md5/md5c.c .
+
 install:
 	install -c -m 0755 popclient $(BINDIR)
-	install -c -m 0644 popclient.$(MANSECTION)L $(MANDIR)/man$(MANSECTION)
+	install -c -m 0644 popclient.$(MANSECTION) $(MANDIR)/man$(MANSECTION)
 
 clean:
 	rm -f $(OBJECTS)
 	rm -f $(TARGET)
+	rm -f md5c.c
 	rm -f core

@@ -36,6 +36,7 @@
 #include <signal.h>
 #include <pwd.h>
 #include <errno.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/wait.h>
@@ -57,8 +58,8 @@ int parseMDAargs (struct optrec *options);
 int parsecmdline (int argc, char **argv, struct optrec *options);
 int setdefaults (struct optrec *options);
 int showversioninfo (void);
-int clearbiffbit (void);
-int restorebiffbit (void);
+void clearbiffbit (void);
+void restorebiffbit (void);
 #endif
 
 /* Controls the detail of status/progress messages written to stderr */
@@ -102,7 +103,7 @@ char **argv;
     if (!options.versioninfo)
       if (setdefaults(&options) == 0) {
         parseMDAargs(&options);
-        if (options.whichpop == 3) 
+        if (options.whichpop >= 3) 
           popstatus = doPOP3(&options);
         else
           popstatus = doPOP2(&options);
@@ -147,8 +148,11 @@ struct optrec *options;
   extern char *optarg;          /* defined in getopt(2) */
 
   bzero(options,sizeof(struct optrec));    /* start clean */
-  while (!errflag && (c = getopt(argc,argv,"23Vkvscu:p:f:o:")) != EOF) {
+  while (!errflag && (c = getopt(argc,argv,"A23Vkvscu:p:f:o:n:")) != EOF) {
     switch (c) {
+      case 'A':
+        options->whichpop = 4; /* APOP */
+        break;
       case '2':
         options->whichpop = 2;
         break;
@@ -174,6 +178,9 @@ struct optrec *options;
           fflag++;
           options->foldertype = OF_STDOUT;
         }
+        break;
+      case 'n':
+        options->port=atoi(optarg);
         break;
       case 'u':
         strcpy(options->userid,optarg);
@@ -217,9 +224,9 @@ struct optrec *options;
 
   /* squawk if syntax errors were detected */
   if (errflag) {
-    fputs("usage:  popclient [-2|-3] [-Vksv] [-u server-userid] [-p server-password]\n",
+    fputs("usage:  popclient [-2|-3|-A] [-Vksv] [-u server-userid] [-p server-password]\n",
           stderr);
-    fputs("                  [-f remote-folder] [-c | -o local-folder]  host\n",
+    fputs("                  [-f remote-folder] [-c | -o local-folder] [-n port]  host\n",
           stderr);
   }
   else
@@ -362,6 +369,9 @@ struct optrec *options;
   int childpid;
   char binmailargs [80];
 
+	if (outlevel == O_VERBOSE)
+		fprintf(stderr,"exec %s %s %s\n", MDA_PATH, *mda_argv, mda_argv[1]);
+
   if (pipe(pipefd) < 0) {
     perror("popclient: openmailpipe: pipe");
     return(-1);
@@ -379,6 +389,8 @@ struct optrec *options;
       fputs("popclient: openmailpipe: dup() failed\n",stderr);
       exit(1);
     }
+
+
 
     execv(MDA_PATH,mda_argv);
 
@@ -529,7 +541,7 @@ struct optrec *options;
   globals:       writes biffwas
  *********************************************************************/
 
-int clearbiffbit ()
+void clearbiffbit ()
 {
   struct stat buf;
  
@@ -562,7 +574,7 @@ int clearbiffbit ()
   globals:       reads biffwas
  *********************************************************************/
 
-int restorebiffbit ()
+void restorebiffbit ()
 {
   if (biffwas == -1)
     return;    /* not a tty */

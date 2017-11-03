@@ -18,7 +18,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <varargs.h>
+#include <stdarg.h>
 
 #include "socket.h"
 
@@ -144,15 +144,28 @@ int len;
     return 0;
 }
 
+#ifdef __STDC__
+int SockPrintf(int socket, char *format, ...)
+#else
 int SockPrintf(socket,format,va_alist)
 int socket;
 char *format;
-va_dcl {
+va_dcl
+#endif
+{
 
+#ifdef __STDC__
+	int field;
+#endif
     va_list ap;
     char buf[8192];
     
+#ifdef __STDC__
+    va_start(ap,field);
+#else
     va_start(ap);
+#endif
+
     vsprintf(buf, format, ap);
     va_end(ap);
     return SockWrite(socket, buf, strlen(buf));

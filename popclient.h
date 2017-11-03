@@ -67,6 +67,7 @@ struct optrec {
   int whichpop;
   int silent;
   int foldertype;
+  int port;
   char host [HOSTLEN];
   char loginid [USERIDLEN];
   char userid [USERIDLEN];

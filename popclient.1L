@@ -1,3 +1,4 @@
+.TH popclient 1L
 \. /* Copyright 1993,1994 by Carl Harris, Jr.
 \.  * All rights reserved
 \.  *
@@ -16,18 +17,22 @@
 \.  */
 \.
 \. SCCS ID  @(#)popclient.1L	2.3 (3/31/94)
-.TH popclient 1L
 .SH NAME
 popclient \- retrieve mail from a mailserver using Post Office Protocol.
 .SH SYNOPSIS
 .B popclient
-[\fB-2\fR | \fB-3\fR\|] [\fB-Vksv\fR] [\fB-u\fI server-userid\fR\|] [\fB-p\fI server-password\fR\|]
-.br
-[\fB-f\fI remote-folder\fR\|] [\fB-c\fR | \fB-o\fI local-folder\fR\|] \fI host\fR
+[\fB-2\fR | \fB-3\fR | \fB-A\fR \|] [\fB-Vksv\fR] [\fB-u\fI server-userid\fR\|] [\fB-p\fI server-password\fR\|] [\fB-f\fI remote-folder\fR\|] [\fB-c\fR | \fB-o\fI local-folder\fR\|] [\fB-n\fI port\fR\|] \fI host\fR
 .SH DESCRIPTION
+.PP
+This
+.I popclient
+is a modified version, which accepts an additional
+.B \-n port
+parameter, thus allowing its use with ssh forwarding and APOP.
+.PP
 .I popclient
 is a Post Office Protocol compliant mail retrieval client which supports 
-both POP2 (as specified in RFC 937) and POP3 (RFC 1225).
+POP2 (as specified in RFC 937), POP3 (RFC 1225) and APOP (RFC 1939).
 .PP
 Typically,
 .I popclient
@@ -48,6 +53,8 @@ termination -- see EXIT CODES below.
 Use Post Office Protocol version 2 (POP2). 
 .IP \-3
 Use Post Office Protocol version 3 (POP3).
+.IP \-A
+Use Post Office Protocol version 3 (POP3) with APOP.
 .IP \-k 
 Keep messages in folder on remote mailserver.  Normally, messages are deleted 
 from the folder on the mailserver after they have been retrieved.  Specifying 
@@ -115,6 +122,9 @@ Displays the version information for your copy of
 If you specify the 
 .B \-V
 option, all other options are ignored and no POP connection is made.
+.IP \-n port
+Connect to this port. Otherwise, use the standard port for the selected
+protocol
 .PP
 .SH PROTOCOL SELECTION
 The selection of the correct Post Office Protocol (POP2 or POP3) depends upon
@@ -124,9 +134,10 @@ system adminstrator who installed
 on your system should have chosen an appropriate default protocol for your 
 mailserver.  If you get the message 'Connection refused' when using the 
 default protocol, try specifying
-.B \-2
-or
+.B \-2,
 .B \-3
+or
+.B \-A
 to select a different protocol.  If the 'Connection refused' message persists 
 regardless of the protocol selected, it is likely that your mailserver is not 
 running a POP compliant mail service.
@@ -304,13 +315,30 @@ Something totally undefined occured.  This is usually caused by a bug within
 .I popclient.
 Do let me know if this happens.
 .PP
+.SH EXAMPLES
+.PP
+Use with ssh port forwarding:
+.PP
+ssh -n -f -L 6969:mailserver:110 mailserver sleep 60
+.PP
+popclient -k -n 6969 -o $HOME/mailbox localhost
+.PP
+.I
+.PP
 .SH AUTHOR
 .I popclient
 was written by Carl Harris at Virginia Polytechnic Institute and State   
 University (a.k.a. Virginia Tech).
 .PP
+Port selection and APOP support was added by SPDsoft (spd@daphne.cps.unizar.es)
+at Zaragoza University
+.PP
+MD5 code is from the RSA Data Security, Inc. MD5 Message-Digest Algorithm"
+(RFC 1321)
+.PP
 .SH BUGS
 There are none!  Well, maybe one or two.  Send comments, bug reports, gripes, 
 and the like to ceharris@vt.edu.
 .SH SEE ALSO
-mail(1), binmail(1), sendmail(8), popd(8), RFC 937, RFC 1225.
+mail(1), binmail(1), ssh(1), sendmail(8), popd(8), RFC 937, RFC 1225, RFC 1939,
+RFC 1321.

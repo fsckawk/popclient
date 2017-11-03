@@ -58,7 +58,11 @@ Send formatted output to the socket, followed
 by a CR-LF.
 Returns 0 for success.
 */
+#ifdef __STDC__
+int SockPrintf(int socket, char *format, ...);
+#else
 int SockPrintf();
+#endif
 
 /*
 Check socket for readability.  return 0 for not readable,

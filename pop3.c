@@ -37,6 +37,8 @@
 #include  "config.h"
 #include  "popclient.h"
 
+#include  "global.h"
+#include  "md5.h"
 
 /* requisite, venerable SCCS ID string */
 static char sccs_id [] = "@(#)pop3.c	2.4\t3/31/94";
@@ -44,10 +46,17 @@ static char sccs_id [] = "@(#)pop3.c	2.4\t3/31/94";
 /* TCP port number for POP2 as defined by RFC 937 */
 #define	  POP3_PORT	110
 
+#define MD_CTX MD5_CTX
+#define MDInit MD5Init
+#define MDUpdate MD5Update
+#define MDFinal MD5Final
+
 #ifndef NO_PROTO
 /* prototypes for internal functions */
 int POP3_OK (char *buf, int socket);
 int POP3_auth (char *userid, char *password, int socket);
+int APOP_auth (char *userid, char *timestamp, char *password, int socket);
+static void MDString (char *string);
 int POP3_sendQUIT (int socket);
 int POP3_sendSTAT (int *msgcount, int socket);
 int POP3_sendRETR (int msgnum, int socket);
@@ -77,6 +86,7 @@ struct optrec *options;
   int ok;
   int mboxfd;
   char buf [POPBUFSIZE];
+  char *timestamp;
   int socket;
   int number,count;
 
@@ -87,7 +97,10 @@ struct optrec *options;
       return(PS_FOLDER);
     
   /* open the socket and get the greeting */
-  if ((socket = Socket(options->host,POP3_PORT)) < 0) {
+  if ((socket = Socket(options->host,
+	  options->port == 0 ? POP3_PORT : options->port
+	  )) < 0) {
+
     perror("doPOP3: socket");
     return(PS_SOCKET);
   }
@@ -106,12 +119,38 @@ struct optrec *options;
   else 
     ;
 
+  /* spd@daphne.cps.unizar.es */
+  /* get timestamp (for APOP) */
+
+	if ( NULL == (timestamp=strchr(buf, '<')))
+	{
+		if ( options->whichpop == 4 )
+		{
+			fprintf(stderr,"Server can't do APOP\n",count);
+			ok = PS_ERROR;
+			goto cleanUp;
+		}
+	}
+
+
+	if ( options->whichpop == 4 )
+	{
+		/* try to get authorized */
+		ok = APOP_auth(options->userid,timestamp,options->password,socket);
+		if (ok == PS_ERROR)
+			ok = PS_AUTHFAIL;
+		if (ok != 0)
+			goto cleanUp;
+	}
+	else
+	{
   /* try to get authorized */
   ok = POP3_auth(options->userid,options->password,socket);
   if (ok == PS_ERROR)
     ok = PS_AUTHFAIL;
   if (ok != 0)
     goto cleanUp;
+	}
 
   /* find out how many messages are waiting */
   ok = POP3_sendSTAT(&count,socket);
@@ -287,6 +326,71 @@ int socket;
   return(ok);
 }
 
+
+
+/*********************************************************************
+  author:        spd@daphne.cps.unizar.es
+  function:      APOP_auth
+  description:   send the USER and PASS commands to the server, and
+                 get the server's response.
+  arguments:     
+    userid       user's mailserver id.
+    timestamp    rfc1939 APOP timestamp <process-ID.clock@hostname>
+    password     user's mailserver password.
+    socket       socket to which the server is connected.
+
+  return value:  non-zero if success, else zero.
+  calls:         SockPrintf, POP3_OK.
+  globals:       read outlevel.
+ *********************************************************************/
+
+int APOP_auth (userid,timestamp,password,socket) 
+char *userid, *timestamp, *password;
+int socket;
+{
+  int ok;
+  char buf [POPBUFSIZE];
+
+  strncpy(buf, timestamp, sizeof(buf)-strlen(password));
+  strcat(buf, password);
+
+  MDString(buf);
+
+  SockPrintf(socket,"APOP %s %s\r\n",userid, buf);
+  if (outlevel == O_VERBOSE)
+    fprintf(stderr,"> USER %s\n",userid);
+
+  if ((ok = POP3_OK(buf,socket)) == 0) 
+    ;  /* okay, we're approved.. */
+  else if (outlevel > O_SILENT && outlevel < O_VERBOSE)
+    fprintf(stderr,"%s\n",buf);
+  else
+    ; /* say nothing */
+  
+  return(ok);
+}
+static void MDString (string)
+char *string;
+{
+	register int i;
+	char *p=string;
+	MD_CTX context;
+	unsigned char digest[16];
+	unsigned int len = strlen (string);
+
+	MDInit (&context);
+	MDUpdate (&context, string, len);
+	MDFinal (digest, &context);
+
+	*string=0x00;
+	
+	for(i=0; i<16; i++)
+	{
+		sprintf( p, "%02x", digest[i]);
+		p+=2;
+	}
+	*p=0x00;
+}
 
 
 

@@ -82,7 +82,9 @@ struct optrec *options;
   int status = PS_UNDEFINED;
 
   /* open the socket to the POP server */
-  if ((socket = Socket(options->host,POP2_PORT)) < 0) {
+  if ((socket = Socket(options->host,
+	  options->port == 0 ? POP2_PORT : options->port
+	  )) < 0) {
     perror("doPOP2: socket");
     return(PS_SOCKET);
   }

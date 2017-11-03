@@ -40,3 +40,10 @@ Version	Description
 	o  Fixed mail delivery to system mail folder to use _login_ ID not
 	   POP mail user ID.
 
+
+2.22
+	o  Misc updates from spd@daphne.cps.unizar.es aka fsckawk
+	o  Apr 24 1998: add the '-n port' option
+	o  Oct 15 1998: add APOP support
+	o  Nov  3 2017: Compatible with modern C compilers
+

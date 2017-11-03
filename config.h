@@ -31,7 +31,7 @@
 /***** POP defaults *****/
 
 /* default protocol (2 = POP2, 3 = POP3) */
-#define  DEF_PROTOCOL	2       
+#define  DEF_PROTOCOL	3       
 
 
 /***** Mail Delivery Agent (MDA) definitions  *****/
@@ -44,7 +44,7 @@
 
 /* MDA command args; $u passes user's login id (usually "-d $u") */
 /* (may be undefined if the mailer doesn't require arguments (?!)) */
-#define  MDA_ARGS	"-d $u"
+#define  MDA_ARGS	"$u"
 
 /* MDA command arg count -- must be greater than or equal to the number 
    of space-delimited arguments defined in MDA_ARGS. */
