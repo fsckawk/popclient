@@ -1,7 +1,7 @@
 popclient
 =========
 
-This repository is the "official" final resting place of the original 
+This repository was forked from the "official" final resting place of the original 
 `popclient` source code written by Carl Harris around 1993. `popclient` 
 is a very small and simple POP3/POP2 email client that was developed 
 in a time before POP and subsequently IMAP became the de-facto standards 
