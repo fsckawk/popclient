@@ -18,3 +18,7 @@ the `fetchmail` utility. In 2004, [Rob Funk](https://sourceforge.net/u/robfunk/p
 fetchmail, and as of 2013 it was still being actively maintained at
 [www.fetchmail.info](http://www.fetchmail.info). If you're looking for 
 command-line interface for POP, IMAP, etc, Fetchmail is for you.
+
+Anyway, if you are trying to make it work, this patched version should work.
+It has some enhancements, like the capability of using custom ports (for ssh forwarding)
+or the option to use APOP authentication.
